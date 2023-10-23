@@ -5,9 +5,33 @@ import re
 import difflib
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
+from abc import ABC, abstractmethod
+
+class ConsoleApplication(ABC):
+    def __init__(self):
+        self.running = False
+
+    def run(self):
+        self.running = True
+        while self.running:
+            #self.display_menu()
+            self.process_user_input()
+
+    # @abstractmethod
+    # def display_menu(self):
+    #     pass
+
+    @abstractmethod
+    def process_user_input(self):
+        pass
+
+    def quit(self):
+        self.running = False
 
 
 
+
+###Field Based On Field
 class Field:
     def __init__(self, value):
         self.value = value
@@ -115,6 +139,8 @@ class Birthday(Field):
                 print("Incorrect birthday format, should be DD.MM.YYYY.")
         else:
             print("Incorrect birthday format, should be DD.MM.YYYY.")
+
+###Field Based On Field
 
 
 class Record:
@@ -579,21 +605,24 @@ class Notes:
         else:
             return f'{self.note} | Tags are: {self.tags}'
         
+class AddressBookApp(ConsoleApplication):
+    def __init__(self):
+        super().__init__()
+        self.contact_book = AddressBook()
+        self.list_of_notes = NoteBook()
 
-def main():
-    try:
-        contact_book = AddressBook()
-        contact_book.load_addressbook("addressbook.bin")
-    except FileNotFoundError:
-        contact_book = AddressBook()
+    def process_user_input(self):
+        try:
+            self.contact_book.load_addressbook("addressbook.bin")
+        except FileNotFoundError:
+            self.contact_book = AddressBook()
 
-    try:
-        list_of_notes = NoteBook()
-        list_of_notes.load_notebook("notebook.bin")
-    except FileNotFoundError:
-        list_of_notes = NoteBook()
+        try:
+            self.list_of_notes.load_notebook("notebook.bin")
+        except FileNotFoundError:
+            self.list_of_notes = NoteBook()
 
-    all_commands = {
+        all_commands = {
             # General commands
             "hello": lambda: print("Hi! To get commands list print 'info'."),
             "hi": lambda: print("Hi! To get commands list print 'info'."),
@@ -602,68 +631,73 @@ def main():
             "exit": lambda: print("Good bye!"),
             "info": lambda: print(''.join(f"Command list:"), [key for key in all_commands]),
             # AddressBook commands
-            "save addressbook": contact_book.save_addressbook,
-            "load addressbook": lambda: contact_book.load_addressbook(text_after_command),
-            "add contact": lambda: contact_book.add_contact(text_after_command),
-            "add phone": lambda: contact_book.add_phone_to_contact(text_after_command),
-            "add email": lambda: contact_book.add_email_to_contact(text_after_command),
-            "add address": lambda: contact_book.add_address_to_contact(text_after_command),
-            "add birthday": lambda: contact_book.add_birthday_to_contact(text_after_command),
-            "edit phone": lambda: contact_book.edit_phone(text_after_command),
-            "edit email": lambda: contact_book.edit_email(text_after_command),
-            "edit address": lambda: contact_book.edit_address(text_after_command),
-            "delete contact": lambda: contact_book.delete_contact(text_after_command),
-            "delete phone": lambda: contact_book.delete_phone(text_after_command),
-            "delete address": lambda: contact_book.delete_address(text_after_command),
-            "delete email": lambda: contact_book.delete_email(text_after_command),
-            "delete birthday": lambda: contact_book.delete_birthday(text_after_command),
-            "show addressbook": lambda: contact_book.show_addressbook(),
-            "birthdays in": lambda: contact_book.birthday_in(text_after_command),
-            "find contact": lambda: contact_book.find_contact_by_name(text_after_command),
-            "find matches": lambda: contact_book.search_matches_in_addressbook(text_after_command),
+            "save addressbook": self.contact_book.save_addressbook,
+            "load addressbook": lambda: self.contact_book.load_addressbook(text_after_command),
+            "add contact": lambda: self.contact_book.add_contact(text_after_command),
+            "add phone": lambda: self.contact_book.add_phone_to_contact(text_after_command),
+            "add email": lambda: self.contact_book.add_email_to_contact(text_after_command),
+            "add address": lambda: self.contact_book.add_address_to_contact(text_after_command),
+            "add birthday": lambda: self.contact_book.add_birthday_to_contact(text_after_command),
+            "edit phone": lambda: self.contact_book.edit_phone(text_after_command),
+            "edit email": lambda: self.contact_book.edit_email(text_after_command),
+            "edit address": lambda: self.contact_book.edit_address(text_after_command),
+            "delete contact": lambda: self.contact_book.delete_contact(text_after_command),
+            "delete phone": lambda: self.contact_book.delete_phone(text_after_command),
+            "delete address": lambda: self.contact_book.delete_address(text_after_command),
+            "delete email": lambda: self.contact_book.delete_email(text_after_command),
+            "delete birthday": lambda: self.contact_book.delete_birthday(text_after_command),
+            "show addressbook": lambda: self.contact_book.show_addressbook(),
+            "birthdays in": lambda: self.contact_book.birthday_in(text_after_command),
+            "find contact": lambda: self.contact_book.find_contact_by_name(text_after_command),
+            "find matches": lambda: self.contact_book.search_matches_in_addressbook(text_after_command),
             # NoteBook commands
-            "add note": lambda: list_of_notes.add_note(text_after_command),
-            "add tag": lambda: list_of_notes.add_tag(text_after_command),
-            "delete note": lambda: list_of_notes.delete_note(text_after_command),
-            "edit note": lambda: list_of_notes.edit_note(text_after_command),
-            "search note": lambda: list_of_notes.search_notes(text_after_command),
-            "search tag": lambda: list_of_notes.search_notes_by_tag(text_after_command),
-            "save notebook": list_of_notes.save_notebook,
-            "load notebook": lambda: list_of_notes.load_notebook(text_after_command),
-            "show notebook": list_of_notes.show_notebook,
+            "add note": lambda: self.list_of_notes.add_note(text_after_command),
+            "add tag": lambda: self.list_of_notes.add_tag(text_after_command),
+            "delete note": lambda: self.list_of_notes.delete_note(text_after_command),
+            "edit note": lambda: self.list_of_notes.edit_note(text_after_command),
+            "search note": lambda: self.list_of_notes.search_notes(text_after_command),
+            "search tag": lambda: self.list_of_notes.search_notes_by_tag(text_after_command),
+            "save notebook": self.list_of_notes.save_notebook,
+            "load notebook": lambda: self.list_of_notes.load_notebook(text_after_command),
+            "show notebook": self.list_of_notes.show_notebook,
          }
     
-    while True:
-        commands = list(all_commands.keys())
-        command_completer = WordCompleter(commands)
+        while True:
+            commands = list(all_commands.keys())
+            command_completer = WordCompleter(commands)
 
-        closing_words = ["good bye", "close", "exit"]
+            closing_words = ["good bye", "close", "exit"]
 
-        command = ""
-        text_after_command = ""
+            command = ""
+            text_after_command = ""
 
-        input_your_command = prompt('Enter your command: ', completer=command_completer)
+            input_your_command = prompt('Enter your command: ', completer=command_completer)
 
-        for i in all_commands.keys():
-            if input_your_command.lower().startswith(i):
-                command = i
-                text_after_command = input_your_command.lower().removeprefix(i).strip()
-        command_to_check_for_dif = " ".join(input_your_command.split(" ")[0:2])
+            for i in all_commands.keys():
+                if input_your_command.lower().startswith(i):
+                    command = i
+                    text_after_command = input_your_command.lower().removeprefix(i).strip()
+            command_to_check_for_dif = " ".join(input_your_command.split(" ")[0:2])
 
-        if command in closing_words:
-            list_of_notes.save_notebook()
-            contact_book.save_addressbook()
-            all_commands[command]()
-            break
-        elif command in all_commands:
-            all_commands[command]()
-        else:
-            most_similar_command = difflib.get_close_matches(command_to_check_for_dif, commands, n=1)
-            print(f"Invalid command. Print 'info' to see list of commands.\n"
-                  f"The most similar to command: '{command_to_check_for_dif}' is: '{most_similar_command[0]}'") \
-                if (len(most_similar_command) > 0) \
-                else (print(f"Invalid command. Print 'info' to see list of commands. "))
+            if command in closing_words:
+                self.list_of_notes.save_notebook()
+                self.contact_book.save_addressbook()
+                all_commands[command]()
+                self.quit()
+                break
+            elif command in all_commands:
+                all_commands[command]()
+            else:
+                most_similar_command = difflib.get_close_matches(command_to_check_for_dif, commands, n=1)
+                print(f"Invalid command. Print 'info' to see list of commands.\n"
+                    f"The most similar to command: '{command_to_check_for_dif}' is: '{most_similar_command[0]}'") \
+                    if (len(most_similar_command) > 0) \
+                    else (print(f"Invalid command. Print 'info' to see list of commands. "))
+    
 
+def main():
+    app = AddressBookApp()
+    app.run()
 
 if __name__ == '__main__':
     main()
