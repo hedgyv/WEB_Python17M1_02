@@ -14,12 +14,7 @@ class ConsoleApplication(ABC):
     def run(self):
         self.running = True
         while self.running:
-            #self.display_menu()
             self.process_user_input()
-
-    # @abstractmethod
-    # def display_menu(self):
-    #     pass
 
     @abstractmethod
     def process_user_input(self):
